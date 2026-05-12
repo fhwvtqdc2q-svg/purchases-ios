@@ -147,14 +147,14 @@ class ButtonComponentViewModel {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 extension ButtonComponentViewModel.Action {
 
-    var paywallComponentInteractionValue: String {
+    var paywallComponentInteractionValue: String? {
         switch self {
         case .restorePurchases:
             return "restore_purchases"
         case .navigateBack:
             return "navigate_back"
         case .workflowTrigger:
-            return "workflow_trigger"
+            return nil
         case .unknown:
             return "unknown"
         case .sheet:
