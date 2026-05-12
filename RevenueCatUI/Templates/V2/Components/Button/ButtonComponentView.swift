@@ -100,7 +100,6 @@ struct ButtonComponentView: View {
         if let id = viewModel.id,
            let triggerWorkflow = workflowTriggerAction,
            triggerWorkflow(id) {
-            trackButtonComponentInteraction()
             return
         }
 
