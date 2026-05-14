@@ -48,6 +48,17 @@ internal enum Operators {
         case "if":
             return try LogicOperators.opIf(args: args, vars: vars, logger: logger)
 
+        case "+":
+            return try ArithmeticOperators.opAdd(args: args, vars: vars, logger: logger)
+        case "-":
+            return try ArithmeticOperators.opSub(args: args, vars: vars, logger: logger)
+        case "*":
+            return try ArithmeticOperators.opMul(args: args, vars: vars, logger: logger)
+        case "/":
+            return try ArithmeticOperators.opDiv(args: args, vars: vars, logger: logger)
+        case "%":
+            return try ArithmeticOperators.opMod(args: args, vars: vars, logger: logger)
+
         default:
             throw RuleError.unsupportedOperator(name: operatorName)
         }
