@@ -48,6 +48,15 @@ internal enum Operators {
         case "if":
             return try LogicOperators.opIf(args: args, vars: vars, logger: logger)
 
+        case "<":
+            return try ComparisonOperators.opLt(args: args, vars: vars, logger: logger)
+        case "<=":
+            return try ComparisonOperators.opLe(args: args, vars: vars, logger: logger)
+        case ">":
+            return try ComparisonOperators.opGt(args: args, vars: vars, logger: logger)
+        case ">=":
+            return try ComparisonOperators.opGe(args: args, vars: vars, logger: logger)
+
         default:
             throw RuleError.unsupportedOperator(name: operatorName)
         }
