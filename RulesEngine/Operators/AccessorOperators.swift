@@ -69,6 +69,53 @@ internal enum AccessorOperators {
         return .array(missing)
     }
 
+    /// `{"missing_some": [min_required, [path, ...]]}` returns the
+    /// missing-keys array (same shape as `missing`) IF fewer than
+    /// `min_required` of the requested paths are present. Otherwise
+    /// returns `[]` (the rule's required-data condition is satisfied).
+    /// Used to express "any 2 of these 5 fields must be present" style
+    /// requirements.
+    static func opMissingSome(
+        args: Value,
+        vars: Value,
+        logger: RulesEngineLogger
+    ) throws -> Value {
+        let evaluated = try Operators.evalArgs(args, vars: vars, logger: logger)
+        guard evaluated.count == 2 else {
+            throw RuleError.typeMismatch(
+                message: "operator 'missing_some' expects 2 arguments, got \(evaluated.count)"
+            )
+        }
+        let needCountValue = evaluated[0]
+        let options = evaluated[1]
+
+        guard case .array(let items) = options else {
+            throw RuleError.typeMismatch(
+                message: "operator 'missing_some': second argument must be an array of paths, "
+                    + "got \(options)"
+            )
+        }
+        let total = Int64(items.count)
+
+        // Non-numeric `need_count` falls back to 0, mirroring the lenient
+        // coercion of our other operators. With need=0 the condition is
+        // trivially satisfied, so `missing_some` returns `[]`.
+        let need = Int64(needCountValue.asNumber ?? 0)
+
+        let missing = try opMissing(args: options, vars: vars, logger: logger)
+        let missingCount: Int64
+        if case .array(let entries) = missing {
+            missingCount = Int64(entries.count)
+        } else {
+            missingCount = 0
+        }
+
+        if total - missingCount >= need {
+            return .array([])
+        }
+        return missing
+    }
+
     // MARK: - Helpers
 
     /// Normalize `var`'s arg into a `(path, default)` tuple. Accepts a

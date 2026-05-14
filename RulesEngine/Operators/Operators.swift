@@ -27,6 +27,8 @@ internal enum Operators {
             return try AccessorOperators.opVar(args: args, vars: vars, logger: logger)
         case "missing":
             return try AccessorOperators.opMissing(args: args, vars: vars, logger: logger)
+        case "missing_some":
+            return try AccessorOperators.opMissingSome(args: args, vars: vars, logger: logger)
 
         case "==":
             return try EqualityOperators.opLooseEq(args: args, vars: vars, logger: logger)
@@ -47,6 +49,15 @@ internal enum Operators {
             return try LogicOperators.opOr(args: args, vars: vars, logger: logger)
         case "if":
             return try LogicOperators.opIf(args: args, vars: vars, logger: logger)
+
+        case "in":
+            return try StringArrayOperators.opIn(args: args, vars: vars, logger: logger)
+        case "cat":
+            return try StringArrayOperators.opCat(args: args, vars: vars, logger: logger)
+        case "substr":
+            return try StringArrayOperators.opSubstr(args: args, vars: vars, logger: logger)
+        case "merge":
+            return try StringArrayOperators.opMerge(args: args, vars: vars, logger: logger)
 
         default:
             throw RuleError.unsupportedOperator(name: operatorName)

@@ -156,11 +156,92 @@ final class AccessorOperatorsTests: XCTestCase {
         XCTAssertEqual(result, .array([.string("a")]))
     }
 
+    // MARK: - missing_some
+
+    func testMissingSomeReturnsEmptyWhenThresholdMet() throws {
+        // need=1, options=[a, b, c]; b is present → 1 ≥ 1 → satisfied → [].
+        let vars = Value.object(["b": .int(2)])
+        let result = try runMissingSome(
+            args: .array([
+                .int(1),
+                .array([.string("a"), .string("b"), .string("c")])
+            ]),
+            vars: vars
+        )
+        XCTAssertEqual(result, .array([]))
+    }
+
+    func testMissingSomeReturnsMissingListWhenBelowThreshold() throws {
+        // need=2, options=[a, b, c]; only c is present → 1 < 2 → list missing.
+        let vars = Value.object(["c": .int(3)])
+        let result = try runMissingSome(
+            args: .array([
+                .int(2),
+                .array([.string("a"), .string("b"), .string("c")])
+            ]),
+            vars: vars
+        )
+        XCTAssertEqual(result, .array([.string("a"), .string("b")]))
+    }
+
+    func testMissingSomeZeroRequiredAlwaysSatisfied() throws {
+        // need=0 means "any number of these is fine" → always [].
+        let result = try runMissingSome(
+            args: .array([
+                .int(0),
+                .array([.string("a"), .string("b")])
+            ]),
+            vars: .object([:])
+        )
+        XCTAssertEqual(result, .array([]))
+    }
+
+    func testMissingSomeSupportsDotPaths() throws {
+        // Mirrors `missing` semantics — path strings flow through the same
+        // dot-walker.
+        let vars = Value.object(["user": .object(["name": .string("ada")])])
+        let result = try runMissingSome(
+            args: .array([
+                .int(2),
+                .array([.string("user.name"), .string("user.email"), .string("user.age")])
+            ]),
+            vars: vars
+        )
+        XCTAssertEqual(result, .array([.string("user.email"), .string("user.age")]))
+    }
+
+    func testMissingSomeArityMismatchIsTypeError() {
+        XCTAssertThrowsError(
+            try runMissingSome(args: .array([.int(1)]), vars: .object([:]))
+        ) { error in
+            guard case RuleError.typeMismatch = error else {
+                return XCTFail("expected typeMismatch, got \(error)")
+            }
+        }
+    }
+
+    func testMissingSomeNonArrayOptionsIsTypeError() {
+        XCTAssertThrowsError(
+            try runMissingSome(
+                args: .array([.int(1), .string("a")]),
+                vars: .object([:])
+            )
+        ) { error in
+            guard case RuleError.typeMismatch = error else {
+                return XCTFail("expected typeMismatch, got \(error)")
+            }
+        }
+    }
+
     // MARK: - Helpers
 
     private func runVar(_ pathArg: Value, vars: Value) throws -> (Value, [String]) {
         let logger = CapturingLogger()
         let result = try AccessorOperators.opVar(args: pathArg, vars: vars, logger: logger)
         return (result, logger.warnings)
+    }
+
+    private func runMissingSome(args: Value, vars: Value) throws -> Value {
+        try AccessorOperators.opMissingSome(args: args, vars: vars, logger: CapturingLogger())
     }
 }
